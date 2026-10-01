@@ -1,6 +1,7 @@
 import asyncio
 import gc
 import importlib.util
+import os
 import threading
 import time
 from pathlib import Path
@@ -95,15 +96,26 @@ class Engine:
             else (torch.float16 if device == "cuda" else torch.float32)
         )
         tokenizer = AutoTokenizer.from_pretrained(str(path), local_files_only=True, trust_remote_code=False)
-        model = AutoModelForImageTextToText.from_pretrained(
-            str(path),
-            local_files_only=True,
-            trust_remote_code=False,
-            use_safetensors=True,
-            dtype=dtype,
-            device_map={"": device},
-            attn_implementation="sdpa",
-        ).eval()
+        previous_async_load = os.environ.get("HF_DEACTIVATE_ASYNC_LOAD")
+        if device == "mps":
+            # Metal 的权重转换在并发加载时可能崩溃，MPS 使用官方的串行加载开关。
+            os.environ["HF_DEACTIVATE_ASYNC_LOAD"] = "1"
+        try:
+            model = AutoModelForImageTextToText.from_pretrained(
+                str(path),
+                local_files_only=True,
+                trust_remote_code=False,
+                use_safetensors=True,
+                dtype=dtype,
+                device_map={"": device},
+                attn_implementation="sdpa",
+            ).eval()
+        finally:
+            if device == "mps":
+                if previous_async_load is None:
+                    os.environ.pop("HF_DEACTIVATE_ASYNC_LOAD", None)
+                else:
+                    os.environ["HF_DEACTIVATE_ASYNC_LOAD"] = previous_async_load
         self.model, self.tokenizer = model, tokenizer
         self.model_id, self.device, self.max_context = model_id, device, max_context
 

@@ -58,6 +58,8 @@ npm run dev
 
 内存建议不是保证值，系统占用、上下文及框架缓冲区都会影响实际需求。CUDA 使用 BF16（不支持时 FP16），CPU / MPS 使用 FP32，兼容性优先。默认上下文 4096、输出上限 1024；超限请求返回明确错误。当前实现通过 Transformers 加载原始 Safetensors，不包含 GGUF、量化或 vLLM 服务。
 
+MPS 加载时使用 Transformers 的串行权重加载选项，避免并发 Metal 权重转换造成原生崩溃；CUDA / CPU 保持默认加载方式。
+
 截至 2026-10-01 核验，35B Preview 的 HF / ModelScope 文件清单只有配置和权重索引，缺少实际权重分片。应用保留该模型选项，但会实时校验上游清单，缺权重时阻止下载完成和部署。正式仓库 ID 为 `IndexTeam/Index-Translate-35B-A3B-preview`，不使用旧的无 `-preview` 链接。
 
 ## API 兼容范围
@@ -124,6 +126,8 @@ npm run desktop:build
 CI 在 push、pull request 或手动触发时执行。先运行前端构建、Ruff 与 pytest，再构建 macOS Apple Silicon、Windows x64、Linux x64 安装包，作为 Actions Artifacts 保留 14 天。不创建 GitHub Release，不上传模型权重。Windows/macOS 签名与 Apple 公证需要项目持有人的证书；当前流水线生成未签名构建。
 
 macOS Intel 暂未列入构建矩阵，当前 Qwen3.5 所需的新版 PyTorch 不提供对应 Intel macOS 官方 wheel。Windows/Linux CUDA 与 MPS 实际推理应分别在目标硬件验证。自动化测试用受控生成器替代神经网络计算，只证明协议、控制逻辑和下载行为，不代表真实模型质量或性能。
+
+本地额外使用 Python 3.12.12、PyTorch 2.14.1、Transformers 5.18.0，配合官方 2B tokenizer 和随机初始化的小型 Qwen3.5 验证 CPU / MPS 的加载与生成路径。此检查不下载完整模型权重，也不验证 Index-Translate 的翻译质量或大模型内存表现。
 
 ## 上游资料
 
