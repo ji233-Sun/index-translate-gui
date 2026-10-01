@@ -137,19 +137,43 @@ class Studio:
             self.log("使用内嵌 Python 安装 PyTorch / Transformers，首次下载可能需要数分钟")
             uv = os.environ.get("INDEX_STUDIO_UV", "uv")
             requirements = Path(__file__).resolve().parent.parent / "requirements-inference.txt"
-            self.installer = await asyncio.create_subprocess_exec(
+            self.log(f"Python 依赖安装源：{self.settings.python_index_url}")
+            command = [
                 uv,
                 "pip",
                 "install",
                 "--python",
                 sys.executable,
-                "--torch-backend",
-                "auto",
+                "--default-index",
+                self.settings.python_index_url,
                 "--requirements",
                 str(requirements),
                 "--no-progress",
+                "--no-config",
+            ]
+            if self.settings.torch_auto_backend:
+                command.extend(["--torch-backend", "auto"])
+                self.log("自动匹配 PyTorch 加速版本，可能访问 download.pytorch.org 官方源")
+            else:
+                self.log("PyTorch 同样使用所选 Python 安装源，不自动选择 CUDA 版本")
+            # 安装源由应用设置决定，避免系统 uv 配置和索引环境变量覆盖用户选择。
+            installer_env = os.environ.copy()
+            for key in (
+                "UV_INDEX",
+                "UV_EXTRA_INDEX_URL",
+                "UV_INDEX_URL",
+                "UV_DEFAULT_INDEX",
+                "UV_FIND_LINKS",
+                "UV_NO_INDEX",
+                "UV_TORCH_BACKEND",
+                "UV_CONFIG_FILE",
+            ):
+                installer_env.pop(key, None)
+            self.installer = await asyncio.create_subprocess_exec(
+                *command,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT,
+                env=installer_env,
             )
             tail = deque(maxlen=5)
             async for line in self.installer.stdout:

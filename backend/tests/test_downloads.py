@@ -101,7 +101,7 @@ def test_repository_paths_cannot_escape_model_directory(name):
         safe_model_file(name)
 
 
-def test_incomplete_preview_repository_is_not_downloadable(tmp_path):
+def test_incomplete_repository_is_not_downloadable(tmp_path):
     payload = {
         "sha": "fixed-revision",
         "siblings": [
@@ -112,7 +112,7 @@ def test_incomplete_preview_repository_is_not_downloadable(tmp_path):
     settings = Settings(model_dir=str(tmp_path), source="huggingface")
     with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, json=payload))) as client:
         with pytest.raises(ValueError, match="尚未提供完整模型权重"):
-            fetch_manifest(client, "35b", settings)
+            fetch_manifest(client, "2b", settings)
 
 
 @pytest.mark.parametrize("source", ["huggingface", "hf-mirror", "custom", "modelscope"])

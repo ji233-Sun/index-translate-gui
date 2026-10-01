@@ -59,6 +59,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
+          cache-on-failure: true
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -72,11 +73,9 @@ jobs:
           cargo fmt --manifest-path src-tauri/Cargo.toml --check
           cargo clippy --manifest-path src-tauri/Cargo.toml --locked -- -D warnings
       - name: Build desktop installers
-        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: --verbose -- --locked
+        run: node scripts/build-desktop.mjs --verbose -- --locked
       - name: Upload installers
         uses: actions/upload-artifact@v4
         with:

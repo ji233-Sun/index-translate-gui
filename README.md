@@ -4,20 +4,22 @@
 
 ## 功能
 
-- **模型工作台**：Index-Translate 2B、9B、35B-A3B Preview；仅聚焦通用文本翻译。
+- **模型工作台**：Index-Translate 2B、9B；仅聚焦通用文本翻译，不展示 Preview 模型。
 - **下载管理**：ModelScope、Hugging Face、HF Mirror、自定义 HTTPS HF 镜像；暂停、断点续传、进度、速度、失败重试、磁盘空间检查与哈希校验。
 - **本地部署**：安装推理依赖、启动/停止模型；自动选择 CUDA → Apple MPS → CPU，也可手动选择。退出桌面应用会回收 Python 工作进程。
 - **翻译体验**：官方格式的翻译提示、语言选择、自定义语言名称、额外翻译要求、流式显示、停止生成与复制译文。
 - **API 接入**：`/v1/chat/completions`、`/v1/completions`、`/v1/responses`、`/v1/messages`，支持文本流式与非流式请求、真实 token 用量、`/v1/models`。
-- **偏好设置**：端口、访问密钥、局域网访问、模型目录、下载源、计算设备、上下文与输出预算。
+- **偏好设置**：端口、访问密钥、局域网访问、模型目录、模型下载源、Python 依赖安装源、计算设备、上下文与输出预算。
 
 ## 内嵌 Python
 
-Windows x64、macOS Apple Silicon 和 Linux x64 安装包均包含 **Python 3.12.12 + uv 0.10.9 + 基础管理依赖**。最终用户无需安装 Python、Node.js 或 Rust，首次打开应用不需要联网安装 Python。
+Windows x64、macOS 14+ Apple Silicon 和 Linux x64 安装包均包含 **Python 3.12.12 + uv 0.10.9 + 基础管理依赖**。最终用户无需安装 Python、Node.js 或 Rust，首次打开应用不需要联网安装 Python。macOS 最低版本与当前 PyTorch wheel 的系统要求保持一致。
 
 构建脚本通过 uv 获取 python-build-standalone 解释器，基础管理依赖按 `backend/uv.lock` 安装到打包副本中。运行时用内嵌解释器创建应用专属虚拟环境，继承该打包副本的基础依赖。首次点击「安装推理依赖」时，通过 uv 安装 PyTorch、Transformers 和 Accelerate；模型权重单独按所选来源下载。两者均需要网络，并占用额外磁盘空间。系统 Python 和全局包不会被修改。
 
-PyTorch 安装采用 `uv pip --torch-backend auto`，CUDA 是否可用取决于驱动及对应 wheel。依赖安装使用 PyPI / PyTorch 的分发地址，与模型下载源设置独立。
+在「设置 → Python 环境」选择 **PyPI 官方源、清华大学 TUNA、阿里云镜像**，或输入自定义 HTTPS Simple API 地址。该设置与模型下载源独立，通过 `uv pip install --default-index` 生效，不改动全局 uv 配置；失败后可以换源重试。点击「保存并安装推理依赖」会先保存当前选择，再开始安装，日志会记录实际索引地址。已安装的依赖不会因换源重新下载。
+
+默认开启「自动匹配 PyTorch 加速版本」，使用 `--torch-backend auto`；PyTorch 可能从 `download.pytorch.org` 获取 CPU / CUDA wheel，其他依赖使用所选镜像。关闭后，PyTorch 也使用所选 PyPI 镜像，不自动选择 CUDA 版本。CUDA 是否可用取决于驱动及对应 wheel。清华源地址为 [`https://pypi.tuna.tsinghua.edu.cn/simple`](https://mirrors.tuna.tsinghua.edu.cn/help/pypi/)。
 
 ## 本地开发
 
@@ -42,7 +44,7 @@ npm run dev
 
 1. 在「模型工作台」选择下载来源。国内网络优先尝试 ModelScope 或 HF Mirror。
 2. 首次使用推荐 2B。点击「下载模型」，下载进度会实时更新；暂停或网络中断保留已下载内容。
-3. 点击「安装推理依赖」，在运行日志中查看安装状态。
+3. 在「设置 → Python 环境」选择依赖安装源，国内网络可选清华源；点击「保存并安装推理依赖」，在运行日志中查看安装状态。
 4. 权重下载和依赖安装完成后，点击「启动模型」。等待状态变为运行中。
 5. 打开「翻译体验」，或者从「API 接入」复制连接信息到第三方应用。
 
@@ -54,13 +56,12 @@ npm run dev
 | --- | --- | --- |
 | 2B | 约 4.55 GB，另有 tokenizer 等文件 | 官方 CUDA BF16 参考约 8 GB；本客户端 CPU/MPS FP32 建议 16 GB 内存 |
 | 9B | 约 19.31 GB，另有 tokenizer 等文件 | 官方 CUDA BF16 参考约 24 GB；本客户端 CPU/MPS FP32 建议 48 GB 内存 |
-| 35B-A3B Preview | 下载前查询完整文件清单 | 35B 总参数、3B 激活参数；仍需要存放全部权重，不能按 3B 估算内存 |
 
 内存建议不是保证值，系统占用、上下文及框架缓冲区都会影响实际需求。CUDA 使用 BF16（不支持时 FP16），CPU / MPS 使用 FP32，兼容性优先。默认上下文 4096、输出上限 1024；超限请求返回明确错误。当前实现通过 Transformers 加载原始 Safetensors，不包含 GGUF、量化或 vLLM 服务。
 
 MPS 加载时使用 Transformers 的串行权重加载选项，避免并发 Metal 权重转换造成原生崩溃；CUDA / CPU 保持默认加载方式。
 
-截至 2026-10-01 核验，35B Preview 的 HF / ModelScope 文件清单只有配置和权重索引，缺少实际权重分片。应用保留该模型选项，但会实时校验上游清单，缺权重时阻止下载完成和部署。正式仓库 ID 为 `IndexTeam/Index-Translate-35B-A3B-preview`，不使用旧的无 `-preview` 链接。
+下载时会实时校验上游清单；缺少权重或分片时阻止下载完成和部署。
 
 ## API 兼容范围
 
@@ -106,6 +107,7 @@ Vue 3 + Element Plus
 - `backend/studio/`：下载源适配、续传与哈希校验、模型加载、API 协议转换、设置和管理接口。
 - `backend/tests/`：不下载大模型的协议、下载与状态管理回归测试。
 - `scripts/prepare-sidecar.mjs`：准备内嵌 uv/Python，校验 uv 下载哈希，安装基础依赖。
+- `scripts/build-desktop.mjs`：本地与 CI 共用的打包入口，为 Linux 打包器提供内嵌 Python 动态库目录。
 - `.github/workflows/ci.yml`：前端/服务校验及三平台安装包构建。
 
 应用数据目录由 Tauri 的 `app_data_dir` 决定，例如 macOS `~/Library/Application Support/com.indextranslate.studio`。包含设置、虚拟环境及默认模型目录。设置按临时文件原子替换保存，POSIX 文件权限为 0600。模型下载固定到源内容版本，检查 SHA-256 或 Git blob SHA-1；只有全部权重与配置校验完成才标记为就绪。
@@ -135,7 +137,7 @@ macOS Intel 暂未列入构建矩阵，当前 Qwen3.5 所需的新版 PyTorch �
 - [官方文本推理说明](https://github.com/bilibili/Index-Translate/tree/main/inference/llm)
 - [Hugging Face 模型合集](https://huggingface.co/collections/IndexTeam/index-translate)
 - [ModelScope 2B](https://modelscope.cn/models/IndexTeam/Index-Translate-2B)
-- [ModelScope 35B Preview](https://modelscope.cn/models/IndexTeam/Index-Translate-35B-A3B-preview)
+- [ModelScope 9B](https://modelscope.cn/models/IndexTeam/Index-Translate-9B)
 - [Tauri 构建文档](https://v2.tauri.app/distribute/pipelines/github/)
 
 模型及 Python、uv、PyTorch 等依赖分别遵循各自许可证；内嵌解释器和包中的许可证文件随资源一同分发。

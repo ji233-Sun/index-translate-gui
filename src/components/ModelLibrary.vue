@@ -14,6 +14,7 @@ import {
 import {
   bytes,
   sources,
+  pythonSources,
   type Action,
   type Page,
   type Snapshot,
@@ -110,7 +111,7 @@ function start(model: Model) {
         <div>
           <span class="metric-label">本地模型</span
           ><strong
-            >{{ readyCount }} <small>/ 3</small
+            >{{ readyCount }} <small>/ {{ state.models.length }}</small
             ><span class="metric-note">已就绪</span></strong
           >
         </div>
@@ -156,7 +157,12 @@ function start(model: Model) {
     </div>
     <div class="section-heading">
       <div>
-        <h2>选择你的翻译模型 <span class="count-badge">03</span></h2>
+        <h2>
+          选择你的翻译模型
+          <span class="count-badge">{{
+            String(state.models.length).padStart(2, "0")
+          }}</span>
+        </h2>
         <p>从轻量体验到高质量翻译，找到适合你设备的选择。</p>
       </div>
       <div class="source-select">
@@ -192,12 +198,10 @@ function start(model: Model) {
         <div class="model-card-top">
           <span :class="['model-mark', `mark-${model.id}`]"
             ><el-icon :size="22"><Cpu /></el-icon></span
-          ><span :class="['model-badge', { preview: model.preview }]">{{
-            model.badge
-          }}</span>
+          ><span class="model-badge">{{ model.badge }}</span>
         </div>
         <p class="model-family">{{ model.name }}</p>
-        <h3>{{ model.size }}<small v-if="model.preview">MoE</small></h3>
+        <h3>{{ model.size }}</h3>
         <p class="model-description">{{ model.description }}</p>
         <div class="model-specs">
           <div>
@@ -211,10 +215,7 @@ function start(model: Model) {
             }}</strong>
           </div>
           <div><span>覆盖语言</span><strong>150 种</strong></div>
-          <div>
-            <span>架构</span
-            ><strong>{{ model.preview ? "Qwen3.5 MoE" : "Qwen3.5" }}</strong>
-          </div>
+          <div><span>架构</span><strong>Qwen3.5</strong></div>
         </div>
         <div class="memory-hint">
           <el-icon><Cpu /></el-icon><span>{{ model.memory }}</span>
@@ -226,9 +227,7 @@ function start(model: Model) {
           <span class="status-dot" />{{
             model.local.status === "partial"
               ? `已缓存 ${bytes(model.local.downloaded)}`
-              : model.preview
-                ? "预览版 · 检查权重完整性"
-                : "尚未下载到本地"
+              : "尚未下载到本地"
           }}
         </div>
         <el-button
@@ -267,9 +266,7 @@ function start(model: Model) {
               ? "下载进行中"
               : model.local.status === "partial"
                 ? "继续下载"
-                : model.preview
-                  ? "检查并下载"
-                  : "下载模型"
+                : "下载模型"
           }}</el-button
         >
       </article>
@@ -350,6 +347,16 @@ function start(model: Model) {
               ? "下载模型后点击启动，即可在翻译体验页使用，也可以连接第三方应用。"
               : "Python 已随桌面应用内嵌。首次使用安装 PyTorch 与 Transformers，之后即可离线推理。"
           }}
+        </p>
+        <p>
+          依赖安装源：{{
+            pythonSources.find(
+              (source) => source.value === state.settings.python_index_url,
+            )?.label || state.settings.python_index_url
+          }}
+          <button class="text-button" @click="emit('navigate', 'settings')">
+            选择安装源 ↗
+          </button>
         </p>
         <p v-if="state.runtime.error" class="error-text">
           {{ state.runtime.error }}

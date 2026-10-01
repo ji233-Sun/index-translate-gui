@@ -44,7 +44,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "macOS": { "minimumSystemVersion": "13.0" },
+    "macOS": { "minimumSystemVersion": "14.0" },
     "windows": {
       "nsis": {
         "languages": ["SimpChinese", "English"],

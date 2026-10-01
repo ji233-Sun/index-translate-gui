@@ -13,6 +13,7 @@ import { ElMessage } from "element-plus";
 import {
   bytes,
   sources,
+  pythonSources,
   type Action,
   type Settings,
   type Snapshot,
@@ -41,7 +42,10 @@ const locked = computed(
     props.state.runtime.status === "installing",
 );
 const dirty = computed(
-  () => JSON.stringify(form) !== JSON.stringify(props.state.settings),
+  () =>
+    (Object.keys(form) as (keyof Settings)[]).some(
+      (key) => form[key] !== props.state.settings[key],
+    ),
 );
 async function chooseDirectory() {
   if (!props.desktop) {
@@ -69,17 +73,21 @@ function generateKey() {
 async function save() {
   if (!Number.isInteger(form.port) || form.port < 1024 || form.port > 65535) {
     ElMessage.error("端口须为 1024–65535 之间的整数");
-    return;
+    return false;
   }
   if (form.api_key.length < 16 || !/^[\x21-\x7E]+$/.test(form.api_key)) {
     ElMessage.error("访问密钥至少 16 位，且不能含空格或非 ASCII 字符");
-    return;
+    return false;
   }
   if (form.max_tokens >= form.max_context) {
     ElMessage.error("输出上限必须小于上下文长度");
-    return;
+    return false;
   }
-  await props.action("/settings", { ...form }, "PUT", "设置已保存");
+  return props.action("/settings", { ...form }, "PUT", "设置已保存");
+}
+async function installRuntime() {
+  if (dirty.value && !(await save())) return;
+  await props.action("/runtime/install");
 }
 </script>
 
@@ -147,6 +155,51 @@ async function save() {
             密钥只保存在本机设置文件中。重新生成后，需同步更新第三方应用。
           </p></el-form-item
         >
+      </div>
+      <div class="settings-section surface">
+        <div class="settings-section-heading">
+          <el-icon><Download /></el-icon>
+          <div>
+            <h2>Python 环境</h2>
+            <p>解释器已内嵌，为首次安装的推理依赖选择下载源。</p>
+          </div>
+        </div>
+        <el-form-item label="Python 依赖安装源">
+          <el-select
+            v-model="form.python_index_url"
+            filterable
+            allow-create
+            default-first-option
+            placeholder="选择镜像，或输入自定义 HTTPS Simple API 地址"
+          >
+            <el-option
+              v-for="source in pythonSources"
+              :key="source.value"
+              :value="source.value"
+              :label="source.label"
+            />
+          </el-select>
+          <p class="field-help">{{ form.python_index_url }}</p>
+          <p class="field-help">
+            与模型下载源独立。输入自定义地址后按 Enter 确认，再保存设置。
+          </p>
+        </el-form-item>
+        <el-form-item label="PyTorch 安装方式">
+          <div class="switch-field">
+            <el-switch v-model="form.torch_auto_backend" />
+            <span>自动匹配 PyTorch 加速版本</span>
+          </div>
+          <p class="field-help">
+            {{
+              form.torch_auto_backend
+                ? "自动匹配 CPU / CUDA，PyTorch 可能使用 download.pytorch.org 官方源；其他依赖使用上方镜像。"
+                : "所有依赖均使用上方镜像，不自动挑选 CUDA 版本。需要 NVIDIA 加速时建议开启自动匹配。"
+            }}
+          </p>
+        </el-form-item>
+        <p class="field-help">
+          换源在下次安装时生效，已有依赖不会重新下载。安装失败后可以换源重试。
+        </p>
       </div>
       <div class="settings-section surface">
         <div class="settings-section-heading">
@@ -266,9 +319,10 @@ async function save() {
       <el-button
         v-if="state.runtime.status !== 'ready'"
         :icon="Download"
+        :disabled="locked || Boolean(pending)"
         :loading="state.runtime.status === 'installing'"
-        @click="action('/runtime/install')"
-        >安装推理依赖</el-button
+        @click="installRuntime"
+        >{{ dirty ? "保存并安装推理依赖" : "安装推理依赖" }}</el-button
       ><button class="text-button" @click="emit('logs')">查看日志 ↗</button>
     </div>
   </section>

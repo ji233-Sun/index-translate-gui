@@ -9,6 +9,8 @@ export interface Settings {
   model_dir: string;
   source: Source;
   mirror_url: string;
+  python_index_url: string;
+  torch_auto_backend: boolean;
   device: "auto" | "cpu" | "mps" | "cuda";
   max_context: number;
   max_tokens: number;
@@ -22,7 +24,6 @@ export interface Model {
   memory: string;
   description: string;
   badge: string;
-  preview: boolean;
   local: {
     status: "missing" | "partial" | "ready";
     downloaded: number;
@@ -80,6 +81,11 @@ export const sources: { value: Source; label: string; hint: string }[] = [
   { value: "hf-mirror", label: "HF Mirror", hint: "国内镜像" },
   { value: "custom", label: "自定义 HF 镜像", hint: "HTTPS" },
 ];
+export const pythonSources = [
+  { value: "https://pypi.org/simple", label: "PyPI 官方源" },
+  { value: "https://pypi.tuna.tsinghua.edu.cn/simple", label: "清华大学 TUNA" },
+  { value: "https://mirrors.aliyun.com/pypi/simple", label: "阿里云镜像" },
+];
 export function bytes(value: number) {
   if (!value) return "0 B";
   const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), 3);
@@ -98,6 +104,8 @@ export function initialSnapshot(): Snapshot {
       model_dir: "",
       source: "modelscope",
       mirror_url: "https://hf-mirror.com",
+      python_index_url: "https://pypi.org/simple",
+      torch_auto_backend: true,
       device: "auto",
       max_context: 4096,
       max_tokens: 1024,

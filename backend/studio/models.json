@@ -7,8 +7,7 @@
     "weight_gb": 4.55,
     "memory": "CUDA 约 8 GB · CPU / MPS 建议 16 GB 内存",
     "description": "轻量起步，适合日常短文本与本地体验。",
-    "badge": "轻量推荐",
-    "preview": false
+    "badge": "轻量推荐"
   },
   {
     "id": "9b",
@@ -18,18 +17,6 @@
     "weight_gb": 19.31,
     "memory": "CUDA 约 24 GB · CPU / MPS 建议 48 GB 内存",
     "description": "更好的语境理解，兼顾翻译质量与指令遵循。",
-    "badge": "质量进阶",
-    "preview": false
-  },
-  {
-    "id": "35b",
-    "name": "Index-Translate",
-    "size": "35B-A3B",
-    "repo": "IndexTeam/Index-Translate-35B-A3B-preview",
-    "weight_gb": null,
-    "memory": "35B 总参数 · 3B 激活参数，仍需加载全部权重",
-    "description": "MoE 预览模型。下载前检查上游权重是否完整。",
-    "badge": "PREVIEW",
-    "preview": true
+    "badge": "质量进阶"
   }
 ]

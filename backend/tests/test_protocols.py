@@ -203,6 +203,10 @@ def test_length_limit_is_not_reported_as_complete(service):
     payload = client.post(path_for("responses"), headers=AUTH, json=body_for("responses")).json()
     assert payload["status"] == "incomplete"
     assert payload["incomplete_details"]["reason"] == "max_output_tokens"
+    response = client.post(path_for("responses"), headers=AUTH, json=body_for("responses", stream=True))
+    terminal = parse_sse(response.text)[-1]
+    assert terminal["type"] == "response.incomplete"
+    assert terminal["response"]["incomplete_details"]["reason"] == "max_output_tokens"
 
 
 def test_streaming_generation_error_is_a_failed_response(service):
