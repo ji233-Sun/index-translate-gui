@@ -1,0 +1,4 @@
+# 通过 uv 安装到应用的独立环境；不随安装包分发模型或 PyTorch。
+torch>=2.10,<3
+transformers>=5.3,<6
+accelerate>=1.12,<2

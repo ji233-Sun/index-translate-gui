@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Index Translate Studio",
+  "version": "0.1.0",
+  "identifier": "com.indextranslate.studio",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Index Translate Studio",
+        "width": 1280,
+        "height": 860,
+        "minWidth": 940,
+        "minHeight": 660,
+        "backgroundColor": "#f5f6f8"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost data:; connect-src ipc: http://ipc.localhost; font-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Productivity",
+    "shortDescription": "本地运行 Index Translate，连接每一种表达。",
+    "externalBin": ["binaries/index-studio-uv"],
+    "resources": {
+      "python/": "python/",
+      "../backend/studio/": "backend/studio/",
+      "../backend/main.py": "backend/main.py",
+      "../backend/requirements-inference.txt": "backend/requirements-inference.txt"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": { "minimumSystemVersion": "13.0" },
+    "windows": {
+      "nsis": {
+        "languages": ["SimpChinese", "English"],
+        "displayLanguageSelector": true
+      }
+    }
+  }
+}

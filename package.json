@@ -1,0 +1,35 @@
+{
+  "name": "index-translate-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "tauri": "tauri",
+    "desktop": "node scripts/prepare-sidecar.mjs && tauri dev",
+    "desktop:build": "node scripts/prepare-sidecar.mjs && tauri build",
+    "prepare:sidecar": "node scripts/prepare-sidecar.mjs",
+    "test:backend": "uv run --project backend pytest backend/tests",
+    "check:backend": "uv run --project backend ruff check backend"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "@tauri-apps/api": "^2.9.0",
+    "@tauri-apps/plugin-dialog": "^2.4.0",
+    "element-plus": "^2.11.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.0",
+    "@types/node": "^24.0.0",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vue-tsc": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

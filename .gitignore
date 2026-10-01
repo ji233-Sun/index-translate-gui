@@ -1,0 +1,16 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/binaries/
+src-tauri/python/
+src-tauri/gen/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+*.pyc
+.DS_Store
+.env
+.env.*
+*.log
+.playwright-mcp/

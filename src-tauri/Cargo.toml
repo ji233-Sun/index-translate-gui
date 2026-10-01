@@ -1,0 +1,27 @@
+[package]
+name = "index-translate-studio"
+version = "0.1.0"
+description = "A local-first desktop studio for Index Translate"
+edition = "2021"
+rust-version = "1.92"
+
+[lib]
+name = "index_translate_studio_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["time", "sync", "process"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+uuid = { version = "1", features = ["v4"] }
+
+# macOS 27 的 dyld 会拒绝旧版 LLVM strip 生成的未对齐宏库。
+# 只保留构建时依赖的符号，不影响应用运行或发行包内容。
+[profile.release.build-override]
+strip = false
