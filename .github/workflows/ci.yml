@@ -76,7 +76,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: -- --locked
+          args: --verbose -- --locked
       - name: Upload installers
         uses: actions/upload-artifact@v4
         with:
